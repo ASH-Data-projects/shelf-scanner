@@ -2,4 +2,4 @@ ultralytics
 pandas
 pillow-heif
 pillow
-sklearn
+scikit-learn
