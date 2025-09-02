@@ -1,4 +1,7 @@
 __pycache__
 .env
 .learn
-data
+data/labeled/not_split*
+data/labeled/train
+data/labeled/validation
+data/raw/*
