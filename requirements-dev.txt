@@ -3,3 +3,5 @@ pandas
 pillow-heif
 pillow
 scikit-learn
+numpy
+streamlit
