@@ -5,3 +5,4 @@ pillow
 scikit-learn
 numpy
 streamlit
+pyyaml

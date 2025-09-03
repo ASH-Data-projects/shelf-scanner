@@ -12,8 +12,8 @@ from functools import partial
 from shutil import copy2
 from pandas_path import path
 from typing import Optional, Callable
-
-register_heif_opener() # this allows the program to process .heic images
+import yaml
+import os
 
 def split_yolo_img_set(
         input_path:Path|str,
@@ -22,6 +22,7 @@ def split_yolo_img_set(
         n_jobs:Optional[int]=None,
         **kwargs
     ):
+    
     if isinstance(output_path, str):
         output_path = Path(output_path)
     paths_df, classes = load_yolo_dir(input_path, accepted_extensions)
@@ -162,11 +163,33 @@ def load_yolo_dir(input_path:Path|str, accepted_extensions:tuple=('jpg','jpeg','
         classes = f.read().strip().split('\n')
     return raw_df, classes
 
-def main():
+def create_data_yaml(data_path:Path|str, path_to_data_yaml:Path|str):
+    _, classes = load_yolo_dir(data_path)
+    number_of_classes = len(classes)
+
+    # Create data dictionary
     cpd = Path(__file__).parent.parent
-    src = cpd/'data'/'labeled'/'not_split'/'labeled.zip'
-    dst = cpd/'data'/'labeled'
-    split_yolo_img_set(src, dst, test_size=0.2, random_state=42)
+    labeled_path = cpd/'data'/'labeled'
+    train_path = labeled_path/'train'/'images'
+    val_path = labeled_path/'validation'/'images'
+    data = {
+        'path': labeled_path.as_posix(),
+        'train': train_path.relative_to(labeled_path).as_posix(),
+        'val': val_path.relative_to(labeled_path).as_posix(),
+        'nc': number_of_classes,
+        'names': classes
+    }
+
+    # Write data to YAML file
+    with open(path_to_data_yaml, 'w') as f:
+      yaml.dump(data, f, sort_keys=False)
+    print(f'Created config file at {path_to_data_yaml}')
+    print('\nFile contents:\n')
+    print(yaml.dump(data))
+    return
+
+def main():
+    pass
     
 if __name__ == '__main__':        
     main()
