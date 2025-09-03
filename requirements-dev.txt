@@ -3,3 +3,4 @@ pandas
 pillow-heif
 pillow
 scikit-learn
+pyyaml
