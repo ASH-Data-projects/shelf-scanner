@@ -6,4 +6,4 @@ data/labeled/train
 data/labeled/validation
 data/raw/*
 data/labeled/data.yaml
-models
+models/
