@@ -1,8 +1,10 @@
 ultralytics
 pandas
+pandas-path
 pillow-heif
 pillow
 scikit-learn
 numpy
 streamlit
 pyyaml
+matplotlib
