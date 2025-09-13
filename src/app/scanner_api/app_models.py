@@ -5,7 +5,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from ultralytics.engine.results import Results
 from ultralytics import YOLO
 from typing import Any
-from scanner_classes import ScannerResult
+from .scanner_classes import ScannerResult
 
 class OrderModel:
     def __init__(self, shelf_csv=None):
@@ -62,19 +62,8 @@ class Scanner:
  
         return pred
         
-def test():
-    from pathlib import Path
-    yolo_path = Path(__file__).parent.parent.parent.parent/'models'/'my_model.pt'
-    shelf_path = Path(__file__).parent/'shelves'/'BATERIAS (1F) 0,36M.csv'
-    img = Path(__file__).parent.parent.parent.parent/'data'/'test'/'test_img.jpg'
-    
-    yolo_model = YOLO(yolo_path)
-    order_model = OrderModel(shelf_path)
-    
-    scanner = Scanner(yolo_model=yolo_model, order_model=order_model)
-    
-    print(scanner.predict(img))
-    
+def main():
+    pass
 
 if __name__ == '__main__':
-    test()
+    main()
