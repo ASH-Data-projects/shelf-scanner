@@ -90,21 +90,21 @@ class OrderModel:
         x,y,h,w = input.boxes.xywh.T
         cls = input.boxes.cls
         data = {'x': x, 'y': y, 'w': w, 'h': h, 'cls': cls}
-        detection = pd.DataFrame(data)
+        detection_df = pd.DataFrame(data)
             
-        norm_coor = self._preprocess_boxes_coordinates(detection)
-        detection['pos'] = self.position_finder.predict(norm_coor[['x','y']])
-        detection['detected_SKU'] = detection['cls'].map(input.names)
-        detection.sort_values('pos', ignore_index=True, inplace=True)
+        norm_coor = self._preprocess_boxes_coordinates(detection_df)
+        detection_df['pos'] = self.position_finder.predict(norm_coor[['x','y']])
+        detection_df['detected_SKU'] = detection_df['cls'].map(input.names)
+        detection_df.sort_values('pos', ignore_index=True, inplace=True)
         
         def check_item(row):
             row = row[['cls','pos']]
-            return (detection[['cls','pos']] == row).all(axis=1).any()
+            return (detection_df[['cls','pos']] == row).all(axis=1).any()
         
         comparison_df = self.base_shelf[['pos', 'cls']].copy()
         comparison_df['expected_SKU'] = comparison_df['cls'].map(input.names)
         comparison_df['detected'] = comparison_df.apply(check_item, axis=1)
-        return (comparison_df, detection)
+        return (comparison_df, detection_df)
 
 class Scanner:
     """
