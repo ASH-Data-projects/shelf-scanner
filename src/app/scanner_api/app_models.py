@@ -80,11 +80,12 @@ class OrderModel:
         Returns:
             tuple[DataFrame, DataFrame]: The first DataFrame contains the
             expected SKUs in the image that is being scanned. The second
-            DataFrame has a similar structure information related to the
-            scanned image, in this DataFrame the `pos` column is calculated by
-            the `OrderModel` model using the x, y values and the `detected_SKU`
-            column stores SKU of the equivalent class detected by the `YOLO`
-            model. 
+            DataFrame has a similar structure but also contains information
+            related to the scanned image (like xy coordinates of each product
+            and the dimensions of the box containing it). In this DataFrame the
+            `pos` column is calculated by the `OrderModel` model using the x, y
+            values and the `detected_SKU` column stores SKU of the equivalent
+            class detected by the `YOLO` model. 
         """
         
         x,y,h,w = input.boxes.xywh.T
