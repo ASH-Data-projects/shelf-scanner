@@ -31,7 +31,7 @@ class OrderModel:
         df.y = scaler.fit_transform(df[['y']])
         return df
     
-    def _get_position_finder(self, base_shelf:pd.DataFrame) -> None:
+    def _get_position_finder(self, base_shelf:pd.DataFrame) -> KNeighborsClassifier:
         """
         This method creates a position finder model that given the center of
         a scanned box from a YOLO model, returns the position it represents in
@@ -92,8 +92,8 @@ class OrderModel:
         data = {'x': x, 'y': y, 'w': w, 'h': h, 'cls': cls}
         detection = pd.DataFrame(data)
             
-        detection = self._preprocess_boxes_coordinates(detection)
-        detection['pos'] = self.position_finder.predict(detection[['x','y']])
+        norm_coor = self._preprocess_boxes_coordinates(detection)
+        detection['pos'] = self.position_finder.predict(norm_coor[['x','y']])
         detection['detected_SKU'] = detection['cls'].map(input.names)
         detection.sort_values('pos', ignore_index=True, inplace=True)
         
