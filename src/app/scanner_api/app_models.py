@@ -98,7 +98,6 @@ class OrderModel:
         comparison_df = self.base_shelf[['pos', 'cls']].copy()
         comparison_df['expected_SKU'] = comparison_df['cls'].map(input.names)
         comparison_df['detected'] = comparison_df.apply(check_item, axis=1)
-        
         return (comparison_df, detection)
 
 class Scanner:
@@ -116,9 +115,7 @@ class Scanner:
         """
         yolo_result = self.yolo_model.predict(image)[0]
         order_result = self.order_model.predict(yolo_result)
-        
         pred = ScannerResult(yolo_result, order_result)
- 
         return pred
         
 def main():
