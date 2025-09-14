@@ -5,9 +5,36 @@ from ultralytics.engine.results import Results
 from ultralytics import YOLO
 from typing import Any
 from .scanner_classes import ScannerResult
+from os import PathLike
 
 class OrderModel:
+    
     def __init__(self, shelf_csv):
+        self._select_order(shelf_csv)
+    
+    @staticmethod
+    def _preprocess_boxes_coordinates(df: pd.DataFrame):
+        """
+        This method expects a DataFrame that represents the boxes of the result
+        of a YOLO model containing 'x' and 'y' columns and then applies a
+        standard scaling to each one independently.
+        """
+        df = df.copy()
+        scaler = StandardScaler()
+        df.x = scaler.fit_transform(df[['x']])
+        df.y = scaler.fit_transform(df[['y']])
+        return df
+    
+    def _select_order(self, shelf_csv:PathLike):
+        """
+        This method selects the shelf arrangement to be analyzed by the model
+        
+        Args:
+            shelf_csv (PathLike): a PathLike object pointing to a .csv file
+            that contains the boxes data of the shelf arrangement to be 
+            analyzed written in the yolo format.
+        """
+        
         df = pd.read_csv(
             shelf_csv,
             sep=' ',
@@ -16,22 +43,17 @@ class OrderModel:
         df.sort_values('y',inplace=True, ignore_index=True)
         df['pos'] = range(df.shape[0])
         self.base_shelf = df[['x', 'y', 'w', 'h', 'cls', 'pos']]
-        self.select_order(df)
-    
-    @staticmethod
-    def _preprocess_boxes_coordinates(df: pd.DataFrame):
-        df = df.copy()
-        scaler = StandardScaler()
-        df.x = scaler.fit_transform(df[['x']])
-        df.y = scaler.fit_transform(df[['y']])
-        return df
-    
-    def select_order(self, df:pd.DataFrame):
+        
         df = self._preprocess_boxes_coordinates(df)
         self.position_finder = KNeighborsClassifier(n_neighbors=1)
         self.position_finder.fit(df[['x','y']], df.pos)
     
     def predict(self, input:Results) -> pd.DataFrame:
+        """
+        prediction method of the OrderModel object.
+        
+        """
+        
         x,y,h,w = input.boxes.xywh.T
         cls = input.boxes.cls
         data = {'x': x, 'y': y, 'w': w, 'h': h, 'cls': cls}
