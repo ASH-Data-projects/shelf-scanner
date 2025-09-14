@@ -8,31 +8,56 @@ from .scanner_classes import ScannerResult
 from os import PathLike
 
 class OrderModel:
+    """
+    This model aims to predict the position of an product within a shelf from
+    the coordinates of it within an image.
+    """
     
     def __init__(self, shelf_csv):
-        self._select_order(shelf_csv)
+        self.base_shelf = self._load_base_shelf(shelf_csv)
+        self.position_finder = self._get_position_finder(self.base_shelf)
     
     @staticmethod
-    def _preprocess_boxes_coordinates(df: pd.DataFrame):
+    def _preprocess_boxes_coordinates(df: pd.DataFrame) -> pd.DataFrame:
         """
         This method expects a DataFrame that represents the boxes of the result
         of a YOLO model containing 'x' and 'y' columns and then applies a
         standard scaling to each one independently.
         """
+        
         df = df.copy()
         scaler = StandardScaler()
         df.x = scaler.fit_transform(df[['x']])
         df.y = scaler.fit_transform(df[['y']])
         return df
     
-    def _select_order(self, shelf_csv:PathLike):
+    def _get_position_finder(self, base_shelf:pd.DataFrame) -> None:
         """
-        This method selects the shelf arrangement to be analyzed by the model
+        This method creates a position finder model that given the center of
+        a scanned box from a YOLO model, returns the position it represents in
+        the shelf.
         
         Args:
-            shelf_csv (PathLike): a PathLike object pointing to a .csv file
-            that contains the boxes data of the shelf arrangement to be 
-            analyzed written in the yolo format.
+            base_shelf (DataFrame): A DataFrame containing the data that
+                describes the normalized positions of the products in the base
+                shelf.
+            
+        Returns:
+            KNeighborsClassifier: The model that predicts the position within
+                the shelf that a scanned product has.
+        """
+        
+        position_finder = KNeighborsClassifier(n_neighbors=1)
+        position_finder.fit(base_shelf[['x','y']], base_shelf.pos)
+        return position_finder
+    
+    def _load_base_shelf(self, shelf_csv:PathLike) -> pd.DataFrame:
+        """
+        This method loads the data that describes the base shelf from a csv
+        file and stores it in a pd.DataFrame object. 
+         
+        Args:
+            shelf_csv (PathLike): A PathLike object pointing to a .csv file.
         """
         
         df = pd.read_csv(
@@ -42,16 +67,18 @@ class OrderModel:
         )
         df.sort_values('y',inplace=True, ignore_index=True)
         df['pos'] = range(df.shape[0])
-        self.base_shelf = df[['x', 'y', 'w', 'h', 'cls', 'pos']]
-        
         df = self._preprocess_boxes_coordinates(df)
-        self.position_finder = KNeighborsClassifier(n_neighbors=1)
-        self.position_finder.fit(df[['x','y']], df.pos)
+        return df[['x', 'y', 'w', 'h', 'cls', 'pos']]
     
-    def predict(self, input:Results) -> pd.DataFrame:
+    def predict(self, input:Results) -> tuple[pd.DataFrame, pd.DataFrame]:
         """
-        prediction method of the OrderModel object.
+        Prediction method of the OrderModel object.
         
+        Args:
+            input (Results): Results object obtained from the yolo model.
+            
+        Returns:
+            tuple[DataFrame, DataFrame]: The first dataframe contains 
         """
         
         x,y,h,w = input.boxes.xywh.T
@@ -61,7 +88,7 @@ class OrderModel:
             
         detection = self._preprocess_boxes_coordinates(detection)
         detection['pos'] = self.position_finder.predict(detection[['x','y']])
-        detection['SKU'] = detection['cls'].map(input.names)
+        detection['detected_SKU'] = detection['cls'].map(input.names)
         detection.sort_values('pos', ignore_index=True, inplace=True)
         
         def check_item(row):
@@ -69,8 +96,8 @@ class OrderModel:
             return (detection[['cls','pos']] == row).all(axis=1).any()
         
         comparison_df = self.base_shelf[['pos', 'cls']].copy()
-        comparison_df['SKU'] = comparison_df['cls'].map(input.names)
-        comparison_df['matches'] = comparison_df.apply(check_item, axis=1)
+        comparison_df['expected_SKU'] = comparison_df['cls'].map(input.names)
+        comparison_df['detected'] = comparison_df.apply(check_item, axis=1)
         
         return (comparison_df, detection)
 
@@ -78,6 +105,7 @@ class Scanner:
     """
     A pipeline to connect the YOLO model and the ordering model.
     """
+    
     def __init__(self, yolo_model: YOLO, order_model: OrderModel):
         self.yolo_model = yolo_model
         self.order_model = order_model
