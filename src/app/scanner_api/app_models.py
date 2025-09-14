@@ -78,7 +78,13 @@ class OrderModel:
             input (Results): Results object obtained from the yolo model.
             
         Returns:
-            tuple[DataFrame, DataFrame]: The first dataframe contains 
+            tuple[DataFrame, DataFrame]: The first DataFrame contains the
+            expected SKUs in the image that is being scanned. The second
+            DataFrame has a similar structure information related to the
+            scanned image, in this DataFrame the `pos` column is calculated by
+            the `OrderModel` model using the x, y values and the `detected_SKU`
+            column stores SKU of the equivalent class detected by the `YOLO`
+            model. 
         """
         
         x,y,h,w = input.boxes.xywh.T
