@@ -111,8 +111,22 @@ class Scanner:
 
     def predict(self, image: Any):
         """
-        Accepts any input that the YOLO model accepts
+        Performs a complete object detection and analysis pipeline.
+
+        This method  first runs the input image through a YOLO model for object
+        detection. The raw results from the YOLO model are then passed to a
+        custom order model for a second-stage analysis. The combined output is 
+        encapsulated in a single `ScannerResult` object.
+
+        Args:
+            image (Any): The input image to be processed by the models. It can
+            be any input that the YOLO model accepts
+
+        Returns:
+            ScannerResult: A complete object containing the results from both
+                the YOLO model and the custom order model.
         """
+
         yolo_result = self.yolo_model.predict(image)[0]
         order_result = self.order_model.predict(yolo_result)
         pred = ScannerResult(yolo_result, order_result)
