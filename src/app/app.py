@@ -6,14 +6,12 @@ from scanner_api.app_models import Scanner, ScannerResult, OrderModel, YOLO
 import pandas as pd
 from pathlib import Path
 
-# Define la ruta raíz del proyecto de manera robusta
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
-# Rutas a los archivos
 MODEL_PATH = PROJECT_ROOT / "models" / "my_model.pt"
 SHELF_CSV_PATH = PROJECT_ROOT / "src" / "app" / "scanner_api" / "shelves" / "BATERIAS (1F) 0,36M.csv"
 
-# --- Cargar modelos y datos una sola vez con @st.cache_resource ---
 @st.cache_resource
 def load_models():
     """
@@ -35,13 +33,12 @@ def load_models():
 # Cargar la instancia del scanner al inicio de la app
 scanner_instance = load_models()
 
-# --- Interfaz de usuario de Streamlit ---
+#  Interfaz de usuario de Streamlit
 st.title("Analizador de Anaquel")
 
 uploaded_file = st.file_uploader("Carga una imagen del anaquel...", type=["jpg", "png", "jpeg"])
 
 if uploaded_file is not None and scanner_instance:
-    # Mostrar la imagen en el frontend
     st.image(uploaded_file, caption="Imagen Subida.", use_container_width=True)
     st.write("")
     st.write("Procesando imagen...")
@@ -51,7 +48,7 @@ if uploaded_file is not None and scanner_instance:
     try:
         pil_image = Image.open(io.BytesIO(image_bytes))
         
-        # --- Ejecutar el pipeline de escaneo ---
+        #  Ejecutar el pipeline de escaneo 
         scanner_result = scanner_instance.predict(pil_image)
         
         # Extraer los DataFrames de los resultados
@@ -72,7 +69,7 @@ if uploaded_file is not None and scanner_instance:
         st.write(f"✅ **{total_en_lugar}** productos están en su lugar.")
         st.write(f"❌ **{total_fuera_de_lugar}** productos no están en su lugar.")
         
-        st.markdown("---") # Separador visual
+        st.markdown("---") 
         
         # --- Sección 2: Productos Detectados ---
         st.subheader("Productos detectados en la imagen")
