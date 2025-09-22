@@ -2,7 +2,8 @@ import streamlit as st
 from PIL import Image
 import numpy as np
 import io
-from scanner_api.app_models import Scanner, ScannerResult, OrderModel, YOLO
+from scanner_api.app_models import Scanner, OrderModel
+from ultralytics import YOLO
 import pandas as pd
 from pathlib import Path
 
@@ -33,22 +34,40 @@ def load_models():
 # Cargar la instancia del scanner al inicio de la app
 scanner_instance = load_models()
 
-#  Interfaz de usuario de Streamlit
+# Interfaz de usuario de Streamlit
 st.title("Analizador de Anaquel")
 
 uploaded_file = st.file_uploader("Carga una imagen del anaquel...", type=["jpg", "png", "jpeg"])
 
 if uploaded_file is not None and scanner_instance:
-    st.image(uploaded_file, caption="Imagen Subida.", use_container_width=True)
-    st.write("")
     st.write("Procesando imagen...")
 
     image_bytes = uploaded_file.read()
 
     try:
         pil_image = Image.open(io.BytesIO(image_bytes))
+    
+        MAX_WIDTH = 400
+        width, height = pil_image.size
         
-        #  Ejecutar el pipeline de escaneo 
+        if width > MAX_WIDTH:
+            new_height = int(height * (MAX_WIDTH / width))
+            display_image = pil_image.resize((MAX_WIDTH, new_height))
+        else:
+            display_image = pil_image
+
+        col1, col2, col3 = st.columns([1, 4, 1])
+        with col2:
+            st.image(display_image, caption="Imagen Subida.", use_container_width=True)
+
+    
+        
+        # Usa la imagen original para el modelo para no perder calidad
+        scanner_result = scanner_instance.predict(pil_image)
+        
+        
+        
+        # Ejecutar el pipeline de escaneo
         scanner_result = scanner_instance.predict(pil_image)
         
         # Extraer los DataFrames de los resultados
@@ -59,48 +78,66 @@ if uploaded_file is not None and scanner_instance:
         productos_fuera_de_lugar = comparison_df[comparison_df['detected'] == False]
         
         # Cantidades
+        total_productos_esperados = len(comparison_df)
         total_productos_detectados = len(detection_df)
         total_en_lugar = len(productos_en_lugar)
         total_fuera_de_lugar = len(productos_fuera_de_lugar)
-
-        # --- Sección 1: Resumen del Escaneo ---
+        
+        # --- Sección 1: Resumen del Escaneo (con porcentajes) ---
         st.subheader("Resumen del Escaneo")
-        st.write(f"🔍 Se detectaron **{total_productos_detectados}** productos en total.")
-        st.write(f"✅ **{total_en_lugar}** productos están en su lugar.")
-        st.write(f"❌ **{total_fuera_de_lugar}** productos no están en su lugar.")
         
-        st.markdown("---") 
+        if total_productos_esperados > 0:
+            porcentaje_en_lugar = (total_en_lugar / total_productos_esperados) * 100
+            porcentaje_fuera_de_lugar = (total_fuera_de_lugar / total_productos_esperados) * 100
+
+            st.write(f"🔍 **{total_productos_detectados}** productos detectados de un total de **{total_productos_esperados}** esperados.")
+            st.write(f"✅ **{porcentaje_en_lugar:.1f}%** de los productos están en su lugar.")
+            st.write(f"❌ **{porcentaje_fuera_de_lugar:.1f}%** de los productos no están en su lugar.")
+        else:
+            st.write("No hay productos esperados en la configuración del anaquel. No se puede calcular el porcentaje.")
         
-        # --- Sección 2: Productos Detectados ---
-        st.subheader("Productos detectados en la imagen")
-        if not detection_df.empty:
-            st.write("Se han encontrado los siguientes productos:")
-            for index, row in detection_df.iterrows():
-                st.write(f"- {row['detected_SKU']} (Posición {int(row['pos'])})")
-        else:
-            st.write("No se detectaron productos en la imagen.")
-
-        st.markdown("---") # Separador visual
-
-        # --- Sección 3: Estado del Anaquel ---
-        st.subheader("Estado del Anaquel")
         
-        # Productos en su lugar
-        st.write(f"✅ **Productos en su lugar ({total_en_lugar}):**")
-        if not productos_en_lugar.empty:
-            for index, row in productos_en_lugar.iterrows():
-                st.write(f"- {row['expected_SKU']} (Posición {int(row['pos'])})")
-        else:
-            st.write("¡Todos los productos esperados fueron detectados en su lugar!")
 
-        # Productos que no están en su lugar
-        st.write("---")
-        st.write(f"❌ **Productos que no están en su lugar ({total_fuera_de_lugar}):**")
-        if not productos_fuera_de_lugar.empty:
-            for index, row in productos_fuera_de_lugar.iterrows():
-                st.write(f"- {row['expected_SKU']} (Posición {int(row['pos'])})")
-        else:
-            st.write("¡No se encontraron productos fuera de lugar!")
+        # --- Botón expandible para detalles ---
+        with st.expander("Ver detalles del escaneo"):
+            # NUEVA SECCIÓN: Imagen con elementos escaneados
+            st.subheader("Imagen del Anaquel Escaneado")
+            
+            # Convierte el resultado de YOLO a un formato compatible con st.image
+            scanned_image = scanner_result.yolo_result.plot()
+            st.image(scanned_image, caption="Anaquel con elementos detectados.", use_container_width=True)
+            
+            st.markdown("---") # Separador visual
+            # Productos detectados
+            st.subheader("Productos detectados en la imagen")
+            if not detection_df.empty:
+                st.write("Se han encontrado los siguientes productos:")
+                for index, row in detection_df.iterrows():
+                    st.write(f"- {row['detected_SKU']} (Posición {int(row['pos'])})")
+            else:
+                st.write("No se detectaron productos en la imagen.")
+            
+            st.markdown("---")
+
+            # Contenido de la sección de estado del anaquel
+            st.subheader("Estado del Anaquel")
+            
+            # Productos en su lugar
+            st.write(f"✅ **Productos en su lugar ({total_en_lugar}):**")
+            if not productos_en_lugar.empty:
+                for index, row in productos_en_lugar.iterrows():
+                    st.write(f"- {row['expected_SKU']} (Posición esperada: {int(row['pos'])})")
+            else:
+                st.write("¡Todos los productos esperados fueron detectados en su lugar!")
+
+            # Productos que no están en su lugar
+            st.write("---")
+            st.write(f"❌ **Productos que no están en su lugar ({total_fuera_de_lugar}):**")
+            if not productos_fuera_de_lugar.empty:
+                for index, row in productos_fuera_de_lugar.iterrows():
+                    st.write(f"- {row['expected_SKU']} (Posición esperada: {int(row['pos'])})")
+            else:
+                st.write("¡No se encontraron productos fuera de lugar!")
 
     except Exception as e:
         st.error(f"Error al procesar la imagen: {e}")
