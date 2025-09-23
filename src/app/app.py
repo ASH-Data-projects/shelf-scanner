@@ -120,7 +120,7 @@ if uploaded_file is not None and scanner_instance:
         else:
             display_scanned_image = scanned_pil_image
 
-        # --- Muestra la imagen escaneada (CENTRADADA) ---
+        # --- Muestra la imagen escaneada ---
         st.markdown("---")
         st.subheader("Anaquel Escaneado")
         
