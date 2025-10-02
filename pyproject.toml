@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shelf_scanner"
+version = "0.1.0"
+description = "A brief description of my project"  # TODO
+readme = "README.md"
+authors = [
+    {name = "Saulo Contreras", email = "your.email@example.com"}, # 📝 Update your details
+    {name = "Ali Pereira", email = "aliper1908@gmail.com"},
+    {name = "Shadek Jaramillo", email = "shadekjaramillo@gmail.com"},
+]
+license = {file = "LICENSE"}
+
+dependencies = [
+    "ultralytics",
+    "pandas",
+    "pandas-path",
+    "pillow-heif",
+    "pillow",
+    "scikit-learn",
+    "numpy",
+    "streamlit",
+    "pyyaml",
+    "matplotlib",
+]
+
+[tool.setuptools]
+packages = [
+    "scanner_api",
+]
+package-dir = {"" = "src"}

@@ -3,3 +3,4 @@ __pycache__
 .learn
 data
 models/
+*.egg-info
