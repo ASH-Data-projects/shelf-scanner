@@ -6,7 +6,34 @@ from scanner_api.app_models import Scanner, OrderModel
 from ultralytics import YOLO
 import pandas as pd
 from pathlib import Path
+from streamlit_navigation_bar import st_navbar
 
+
+st.markdown("""
+    <style>
+    #MainMenu {visibility: hidden;}
+    header {visibility: hidden;}
+            
+
+  
+  body {
+    
+        background-color: #0E1117 !important; 
+        text-align: center;
+    }
+            
+    h1 {
+        text-align: center;
+        font-size: 4em !important; 
+        margin-top: -20px;
+    }
+            
+    
+    </style>
+    """, unsafe_allow_html=True)
+
+        
+    
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -35,7 +62,9 @@ def load_models():
 scanner_instance = load_models()
 
 # Interfaz de usuario de Streamlit
-st.title("Analizador de Anaquel")
+st.title("Shelf Scanner") # Ahora centrado por el CSS inyectado
+
+st.markdown("---")
 
 uploaded_file = st.file_uploader("Carga una imagen del anaquel...", type=["jpg", "png", "jpeg"])
 
