@@ -6,7 +6,7 @@ from scanner_api.app_models import Scanner, OrderModel
 from ultralytics import YOLO
 import pandas as pd
 from pathlib import Path
-from streamlit_navigation_bar import st_navbar
+
 
 
 st.markdown("""
