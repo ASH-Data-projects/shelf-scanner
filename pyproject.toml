@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "A brief description of my project"  # TODO
 readme = "README.md"
 authors = [
-    {name = "Saulo Contreras", email = "your.email@example.com"}, # 📝 Update your details
+    {name = "Saulo Contreras", email = "scontrerasriera@gmail.com"}, # 📝 Update your details
     {name = "Ali Pereira", email = "aliper1908@gmail.com"},
     {name = "Shadek Jaramillo", email = "shadekjaramillo@gmail.com"},
 ]
