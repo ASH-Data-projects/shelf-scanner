@@ -6,6 +6,7 @@ from scanner_api.app_models import Scanner, OrderModel
 from ultralytics import YOLO
 import pandas as pd
 from pathlib import Path
+import cv2
 
 
 
@@ -39,6 +40,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 MODEL_PATH = PROJECT_ROOT / "models" / "my_model.pt"
 SHELF_CSV_PATH = PROJECT_ROOT / "src" / "scanner_api" / "shelves" / "BATERIAS (1F) 0,36M.csv"
+LOGO_PATH = PROJECT_ROOT / "images" / "logo.png"
 
 @st.cache_resource
 def load_models():
@@ -62,7 +64,7 @@ def load_models():
 scanner_instance = load_models()
 
 # Interfaz de usuario de Streamlit
-st.title("Shelf Scanner") # Ahora centrado por el CSS inyectado
+st.image(LOGO_PATH, use_container_width=True) # Ahora centrado por el CSS inyectado
 
 st.markdown("---")
 
@@ -76,7 +78,7 @@ if uploaded_file is not None and scanner_instance:
     try:
         pil_image = Image.open(io.BytesIO(image_bytes))
 
-        
+        # ... (Lógica de rotación EXIF) ...
         try:
             for orientation in ExifTags.TAGS.keys():
                 if ExifTags.TAGS[orientation] == 'Orientation':
@@ -89,8 +91,7 @@ if uploaded_file is not None and scanner_instance:
                 pil_image = pil_image.rotate(270, expand=True)
             elif exif[orientation] == 8:
                 pil_image = pil_image.rotate(90, expand=True)
-        except (AttributeError, KeyError, IndexError):
-            # No hay metadatos EXIF, la imagen no se rota
+        except (AttributeError, KeyError, IndexError, TypeError):
             pass
             
         # --- Redimensionar la imagen original para la visualización ---
@@ -138,7 +139,12 @@ if uploaded_file is not None and scanner_instance:
 
         # --- Redimensionar la imagen escaneada para la visualización ---
         scanned_image_arr = scanner_result.yolo_result.plot()
-        scanned_pil_image = Image.fromarray(scanned_image_arr)
+        
+      
+        scanned_image_arr_rgb = cv2.cvtColor(scanned_image_arr, cv2.COLOR_BGR2RGB)
+        
+        
+        scanned_pil_image = Image.fromarray(scanned_image_arr_rgb) 
 
         MAX_WIDTH_SCANNED = 400
         scanned_width, scanned_height = scanned_pil_image.size
@@ -159,6 +165,7 @@ if uploaded_file is not None and scanner_instance:
         
         st.markdown("---") 
         
+        # ... (Resto del código de resultados) ...
         # --- Sección 1: Contador de caras (Productos detectados) ---
         st.subheader("Resumen de Caras de SKU")
         
