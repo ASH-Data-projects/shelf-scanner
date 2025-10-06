@@ -112,7 +112,8 @@ if uploaded_file is not None and scanner_instance:
         scanner_result = scanner_instance.predict(pil_image)
         
         # Extraer los DataFrames de los resultados
-        comparison_df, detection_df = scanner_result.order_result
+        comparison_df = scanner_result.order_result.comparison_df
+        detection_df = scanner_result.order_result.detection_df
 
         def get_brand_from_sku(sku):
             sku_parts = str(sku).split(' ')

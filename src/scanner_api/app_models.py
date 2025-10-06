@@ -4,7 +4,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from ultralytics.engine.results import Results
 from ultralytics import YOLO
 from typing import Any
-from .scanner_classes import ScannerResult
+from .scanner_classes import ScannerResult, OrderResult
 from os import PathLike
 
 class OrderModel:
@@ -105,7 +105,7 @@ class OrderModel:
         comparison_df = self.base_shelf[['pos', 'cls']].copy()
         comparison_df['expected_SKU'] = comparison_df['cls'].map(input.names)
         comparison_df['detected'] = comparison_df.apply(check_item, axis=1)
-        return (comparison_df, detection_df)
+        return OrderResult(comparison_df, detection_df)
 
 class Scanner:
     """
