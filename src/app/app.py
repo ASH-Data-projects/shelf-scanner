@@ -40,7 +40,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 MODEL_PATH = PROJECT_ROOT / "models" / "my_model.pt"
 SHELF_CSV_PATH = PROJECT_ROOT / "src" / "scanner_api" / "shelves" / "BATERIAS (1F) 0,36M.csv"
-LOGO_PATH = PROJECT_ROOT / "images" / "logo.png"
+LOGO_PATH = PROJECT_ROOT / "src" / "app"/ "assets" / "images" / "logo.png"
 
 @st.cache_resource
 def load_models():
