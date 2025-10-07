@@ -3,6 +3,7 @@ from PIL import Image, ExifTags
 import numpy as np
 import io
 from scanner_api.app_models import Scanner, OrderModel
+from scanner_api.scanner_classes import ScannerResult
 from ultralytics import YOLO
 import pandas as pd
 from pathlib import Path
@@ -10,23 +11,58 @@ import cv2
 
 
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+
+
 st.markdown("""
     <style>
+    /* Oculta elementos nativos de Streamlit */
     #MainMenu {visibility: hidden;}
     header {visibility: hidden;}
             
-
-  
-  body {
+    h2, h3, h4, h5, h6, 
+    p, 
+    div[data-testid="stText"], 
+    div[data-testid="stExpander"] > div > div > div > p,
+    .stMarkdown,
+    .stAlert {
+        color: #FAFAFA !important; 
+    }
     
+    a {
+        color: #6C757D !important; 
+    }
+    
+    div.stApp {
+        background-color: #0E1117; 
+    }
+    div[data-testid="stAppViewContainer"] {
+        background-color: #0E1117; 
+    }
+    section.main {
         background-color: #0E1117 !important; 
+    }
+    div[data-testid="stBlockContainer"] {
+        background-color: #0E1117;
+    }
+    
+    body {
         text-align: center;
+
     }
             
     h1 {
         text-align: center;
         font-size: 4em !important; 
         margin-top: -20px;
+    }
+    
+    .st-emotion-cache-18jrb99 > img, .st-emotion-cache-h5rgay > img, 
+    div.st-emotion-cache-vk2m4n > img, 
+    div.st-emotion-cache-10qj09c > img {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
     }
             
     
@@ -36,18 +72,13 @@ st.markdown("""
         
     
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-
 MODEL_PATH = PROJECT_ROOT / "models" / "my_model.pt"
-SHELF_CSV_PATH = PROJECT_ROOT / "src" / "scanner_api" / "shelves" / "BATERIAS (1F) 0,36M.csv"
+SHELF_CSV_PATH = PROJECT_ROOT / "src" / "app" / "scanner_api" / "shelves" / "BATERIAS (1F) 0,36M.csv"
 LOGO_PATH = PROJECT_ROOT / "src" / "app"/ "assets" / "images" / "logo.png"
 
 @st.cache_resource
 def load_models():
-    """
-    Función para cargar el modelo YOLO y el OrderModel.
-    Usa la caché de Streamlit para no recargarlos.
-    """
+
     try:
         yolo_model = YOLO(str(MODEL_PATH))
         order_model = OrderModel(str(SHELF_CSV_PATH))
@@ -64,7 +95,7 @@ def load_models():
 scanner_instance = load_models()
 
 # Interfaz de usuario de Streamlit
-st.image(LOGO_PATH, use_container_width=True) # Ahora centrado por el CSS inyectado
+st.image(str(LOGO_PATH), use_container_width=True) 
 
 st.markdown("---")
 
@@ -78,7 +109,7 @@ if uploaded_file is not None and scanner_instance:
     try:
         pil_image = Image.open(io.BytesIO(image_bytes))
 
-        # ... (Lógica de rotación EXIF) ...
+        # Lógica de rotación EXIF
         try:
             for orientation in ExifTags.TAGS.keys():
                 if ExifTags.TAGS[orientation] == 'Orientation':
@@ -108,13 +139,14 @@ if uploaded_file is not None and scanner_instance:
         with col2:
             st.image(display_image, caption="Imagen Subida.", use_container_width=True)
             
-        # Usa la imagen original para el modelo para no perder calidad
-        scanner_result = scanner_instance.predict(pil_image)
+        # Usa la imagen original para el modelo
+        scanner_result: ScannerResult = scanner_instance.predict(pil_image)
         
         # Extraer los DataFrames de los resultados
         comparison_df = scanner_result.order_result.comparison_df
         detection_df = scanner_result.order_result.detection_df
 
+        # Lógica de procesamiento de DataFrames
         def get_brand_from_sku(sku):
             sku_parts = str(sku).split(' ')
             if len(sku_parts) > 1:
@@ -127,47 +159,16 @@ if uploaded_file is not None and scanner_instance:
             st.warning("La columna 'detected_SKU' no se encontró en los resultados de la detección.")
             detection_df['brand'] = 'Desconocida'
             
-
-        # Productos en su lugar y fuera de lugar
         productos_en_lugar = comparison_df[comparison_df['detected'] == True]
         productos_fuera_de_lugar = comparison_df[comparison_df['detected'] == False]
         
-        # Cantidades
         total_productos_esperados = len(comparison_df)
         total_productos_detectados = len(detection_df)
         total_en_lugar = len(productos_en_lugar)
         total_fuera_de_lugar = len(productos_fuera_de_lugar)
 
-        # --- Redimensionar la imagen escaneada para la visualización ---
-        scanned_image_arr = scanner_result.yolo_result.plot()
-        
-      
-        scanned_image_arr_rgb = cv2.cvtColor(scanned_image_arr, cv2.COLOR_BGR2RGB)
-        
-        
-        scanned_pil_image = Image.fromarray(scanned_image_arr_rgb) 
-
-        MAX_WIDTH_SCANNED = 400
-        scanned_width, scanned_height = scanned_pil_image.size
-        
-        if scanned_width > MAX_WIDTH_SCANNED:
-            new_scanned_height = int(scanned_height * (MAX_WIDTH_SCANNED / scanned_width))
-            display_scanned_image = scanned_pil_image.resize((MAX_WIDTH_SCANNED, new_scanned_height))
-        else:
-            display_scanned_image = scanned_pil_image
-
-        # --- Muestra la imagen escaneada ---
-        st.markdown("---")
-        st.subheader("Anaquel Escaneado")
-        
-        col_scan1, col_scan2, col_scan3 = st.columns([1, 4, 1])
-        with col_scan2:
-            st.image(display_scanned_image, caption="Anaquel con elementos detectados.", use_container_width=True)
         
         st.markdown("---") 
-        
-        # ... (Resto del código de resultados) ...
-        # --- Sección 1: Contador de caras (Productos detectados) ---
         st.subheader("Resumen de Caras de SKU")
         
         if total_productos_detectados > 0:
@@ -175,7 +176,6 @@ if uploaded_file is not None and scanner_instance:
         else:
             st.write("🔍 No se detectó ninguna cara de SKU en la imagen.")
             
-        # --- Agrupar por marca ---
         with st.expander("Ver lista de productos encontrados"):
             if not detection_df.empty:
                 marcas_encontradas = detection_df.groupby('brand')
@@ -186,9 +186,28 @@ if uploaded_file is not None and scanner_instance:
             else:
                 st.write("No se detectaron productos en la imagen.")
         
-        st.markdown("---") 
+        scanned_image_arr = scanner_result.yolo_result.plot()
+        scanned_image_arr_rgb = cv2.cvtColor(scanned_image_arr, cv2.COLOR_BGR2RGB)
+        scanned_pil_image = Image.fromarray(scanned_image_arr_rgb) 
+        
+        MAX_WIDTH_SCANNED = 400
+        scanned_width, scanned_height = scanned_pil_image.size
+        
+        if scanned_width > MAX_WIDTH_SCANNED:
+            new_scanned_height = int(scanned_height * (MAX_WIDTH_SCANNED / scanned_width))
+            display_scanned_image_sku = scanned_pil_image.resize((MAX_WIDTH_SCANNED, new_scanned_height))
+        else:
+            display_scanned_image_sku = scanned_pil_image
 
-        # --- Sección 2: Porcentaje de productos en orden ---
+        st.markdown("---")
+        st.subheader("Anaquel Escaneado (Detección de SKU)")
+        
+        col_scan1, col_scan2, col_scan3 = st.columns([1, 4, 1])
+        with col_scan2:
+            st.image(display_scanned_image_sku, caption="Anaquel con SKU detectados.", use_container_width=True)
+        
+        
+        st.markdown("---") 
         st.subheader("Estado de Inventario")
 
         if total_productos_esperados > 0:
@@ -204,6 +223,29 @@ if uploaded_file is not None and scanner_instance:
             else:
                 st.write("¡Todos los productos esperados fueron detectados en su lugar!")
 
+
+       
+        
+        # Obtener la imagen con las cajas de color VERDE/ROJO (ya es RGB)
+        highlighted_pil_image = scanner_result.highlighted_boxes()
+
+        # Redimensionar la imagen
+        MAX_WIDTH_SCANNED = 400
+        scanned_width, scanned_height = highlighted_pil_image.size
+        
+        if scanned_width > MAX_WIDTH_SCANNED:
+            new_scanned_height = int(scanned_height * (MAX_WIDTH_SCANNED / scanned_width))
+            display_scanned_image_order = highlighted_pil_image.resize((MAX_WIDTH_SCANNED, new_scanned_height))
+        else:
+            display_scanned_image_order = highlighted_pil_image
+
+        st.markdown("---")
+        st.subheader("Verificación de Orden del Anaquel")
+        
+        col_order1, col_order2, col_order3 = st.columns([1, 4, 1])
+        with col_order2:
+            st.image(display_scanned_image_order, caption="Verde: Producto correcto en posición. Rojo: Producto incorrecto o ausente.", use_container_width=True)
+        
     except Exception as e:
         st.error(f"Error al procesar la imagen: {e}")
 

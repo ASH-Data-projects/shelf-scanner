@@ -13,6 +13,7 @@ authors = [
     {name = "Shadek Jaramillo", email = "shadekjaramillo@gmail.com"},
 ]
 license = {file = "LICENSE"}
+requires-python = ">=3.11" 
 
 dependencies = [
     "ultralytics",
