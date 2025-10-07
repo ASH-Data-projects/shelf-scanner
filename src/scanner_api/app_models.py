@@ -90,7 +90,8 @@ class OrderModel:
         
         x,y,h,w = input.boxes.xywh.T
         cls = input.boxes.cls
-        data = {'x': x, 'y': y, 'w': w, 'h': h, 'cls': cls}
+        conf = input.boxes.conf
+        data = {'x': x, 'y': y, 'w': w, 'h': h, 'cls': cls, 'conf':conf}
         detection_df = pd.DataFrame(data)
             
         norm_coor = self._preprocess_boxes_coordinates(detection_df)
@@ -105,6 +106,21 @@ class OrderModel:
         comparison_df = self.base_shelf[['pos', 'cls']].copy()
         comparison_df['expected_SKU'] = comparison_df['cls'].map(input.names)
         comparison_df['detected'] = comparison_df.apply(check_item, axis=1)
+        
+        ## patch start: the next lines are a temporary fix to the duplicated positions problem
+        position_counts = detection_df.pos.value_counts()
+        for pos, count in position_counts.items():
+            if count >1:
+                dup_df = detection_df[detection_df.pos == pos]
+                max_conf = dup_df.conf.max()
+                if comparison_df[comparison_df.pos == pos].detected.any():
+                    name = comparison_df[comparison_df.pos == pos].iloc[0,2]
+                    max_conf = detection_df[detection_df.detected_SKU==name].iloc[0].conf
+                for i, row in dup_df.iterrows():
+                    if row.conf != max_conf:
+                        detection_df.drop(labels = i, inplace=True)
+        detection_df.reset_index(drop = True, inplace=True)
+        ## patch end
         return OrderResult(comparison_df, detection_df)
 
 class Scanner:
