@@ -13,7 +13,7 @@ authors = [
     {name = "Shadek Jaramillo", email = "shadekjaramillo@gmail.com"},
 ]
 license = {file = "LICENSE"}
-requires-python = ">=3.9" 
+requires-python = ">=3.11" 
 
 dependencies = [
     "ultralytics",
@@ -29,7 +29,4 @@ dependencies = [
 ]
 
 [tool.setuptools]
-packages = [
-    "scanner_api",
-]
-package-dir = {"" = "src"}
+package-mode = false 
