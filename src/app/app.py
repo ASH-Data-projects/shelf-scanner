@@ -10,8 +10,15 @@ from pathlib import Path
 import cv2
 import sys
 
+CURRENT_FILE_PATH = Path(__file__).resolve()
+
+ROOT_FOR_DEPLOY = CURRENT_FILE_PATH.parent.parent.parent
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-sys.path.append(str(PROJECT_ROOT / "src"))
+
+SRC_DIR = str(ROOT_FOR_DEPLOY / "src")
+
+sys.path.append(SRC_DIR)
 
 
 st.markdown("""
