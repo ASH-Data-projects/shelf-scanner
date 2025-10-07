@@ -2,13 +2,13 @@ import streamlit as st
 from PIL import Image, ExifTags
 import numpy as np
 import io
-from ..scanner_api.app_models import Scanner, OrderModel
-from ..scanner_api.scanner_classes import ScannerResult
+from scanner_api.app_models import Scanner, OrderModel
+from scanner_api.scanner_classes import ScannerResult
 from ultralytics import YOLO
 import pandas as pd
 from pathlib import Path
 import cv2
-import sys
+
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -73,7 +73,7 @@ st.markdown("""
     
 
 MODEL_PATH = PROJECT_ROOT / "models" / "my_model.pt"
-SHELF_CSV_PATH = PROJECT_ROOT / "src" / "scanner_api" / "shelves" / "BATERIAS (1F) 0,36M.csv"
+SHELF_CSV_PATH = PROJECT_ROOT / "src" / "app" / "scanner_api" / "shelves" / "BATERIAS (1F) 0,36M.csv"
 LOGO_PATH = PROJECT_ROOT / "src" / "app"/ "assets" / "images" / "logo.png"
 
 @st.cache_resource
