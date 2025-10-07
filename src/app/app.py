@@ -8,7 +8,10 @@ from ultralytics import YOLO
 import pandas as pd
 from pathlib import Path
 import cv2
+import sys
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+sys.path.append(str(PROJECT_ROOT / "src"))
 
 
 st.markdown("""
@@ -68,8 +71,6 @@ st.markdown("""
 
         
     
-
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 MODEL_PATH = PROJECT_ROOT / "models" / "my_model.pt"
 SHELF_CSV_PATH = PROJECT_ROOT / "src" / "scanner_api" / "shelves" / "BATERIAS (1F) 0,36M.csv"
