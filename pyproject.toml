@@ -29,4 +29,7 @@ dependencies = [
 ]
 
 [tool.setuptools]
-package-mode = false 
+packages = [
+    "scanner_api",
+]
+package-dir = {"" = "src"}
