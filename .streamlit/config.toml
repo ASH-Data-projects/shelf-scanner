@@ -1,0 +1,5 @@
+[global]
+
+python_version = 3.11
+
+install_local_dependencies = false 
