@@ -8,3 +8,5 @@ numpy
 streamlit
 pyyaml
 matplotlib
+opencv-python
+typing-extensions 
