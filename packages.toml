@@ -3,3 +3,16 @@
 python_version = 3.11 
 
 install_local_dependencies = false 
+
+[server]
+# Mantenemos las protecciones de seguridad en el valor por defecto (true) u omitimos las líneas.
+# Si quieres ser explícito, usa:
+# enableCORS = true
+# enableXsrfProtection = true
+
+# runOnSave = true es opcional para el deploy, pero útil para desarrollo.
+
+# ⚠️ LA LÍNEA CLAVE PARA RESOLVER TU ERROR DE IMPORTACIÓN:
+environment = [
+    "PYTHONPATH=./src"
+]
