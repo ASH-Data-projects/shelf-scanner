@@ -5,8 +5,7 @@ pillow-heif
 pillow
 scikit-learn
 numpy
-streamlit
-pyyaml
+streamlit>=1.50.0
 matplotlib
 opencv-python
 typing-extensions 
