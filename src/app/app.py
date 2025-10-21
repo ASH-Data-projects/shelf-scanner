@@ -95,7 +95,7 @@ def load_models():
 scanner_instance = load_models()
 
 # Interfaz de usuario de Streamlit
-st.image(str(LOGO_PATH), width='stretch') 
+st.image(str(LOGO_PATH), use_container_width=True) 
 
 st.markdown("---")
 
@@ -137,7 +137,7 @@ if uploaded_file is not None and scanner_instance:
 
         col1, col2, col3 = st.columns([1, 4, 1])
         with col2:
-            st.image(display_image, caption="Imagen Subida.", width='stretch')
+            st.image(display_image, caption="Imagen Subida.", use_container_width=True)
             
         # Usa la imagen original para el modelo
         scanner_result: ScannerResult = scanner_instance.predict(pil_image)
@@ -204,7 +204,7 @@ if uploaded_file is not None and scanner_instance:
         
         col_scan1, col_scan2, col_scan3 = st.columns([1, 4, 1])
         with col_scan2:
-            st.image(display_scanned_image_sku, caption="Anaquel con SKU detectados.", width='stretch')
+            st.image(display_scanned_image_sku, caption="Anaquel con SKU detectados.", use_container_width=True)
         
         
         st.markdown("---") 
@@ -244,7 +244,7 @@ if uploaded_file is not None and scanner_instance:
         
         col_order1, col_order2, col_order3 = st.columns([1, 4, 1])
         with col_order2:
-            st.image(display_scanned_image_order, caption="Verde: Producto correcto en posición. Rojo: Producto incorrecto o ausente.", width='stretch')
+            st.image(display_scanned_image_order, caption="Verde: Producto correcto en posición. Rojo: Producto incorrecto o ausente.", use_container_width=True)
         
     except Exception as e:
         st.error(f"Error al procesar la imagen: {e}")
